@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anime Pause Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== PERSISTENT HOME LOGO ===== -->
+  <div class="home-logo" id="home-logo" onclick="goHome()" title="Back to Home">ANIME<span>PAUSE</span></div>
+
+  <!-- ===== SCREEN 1: TITLE ===== -->
+  <div id="screen-title" class="screen">
+    <div class="title-container">
+      <div class="title-glow">ANIME</div>
+      <div class="title-main">PAUSE GAME</div>
+      <div class="title-sub">Build your ultimate character — one pause at a time</div>
+      <button class="btn-start" onclick="showAnimeSelect()">▶ PLAY</button>
+    </div>
+    <div class="particles" id="particles"></div>
+  </div>
+
+  <!-- ===== SCREEN 1.5: LOADING ===== -->
+  <div id="screen-loading" class="screen">
+    <div class="loading-container">
+      <div class="loading-anime-name" id="loading-anime-name"></div>
+      <div class="loading-subtitle">Fetching characters…</div>
+      <div class="loading-bar-wrap">
+        <div class="loading-bar-fill" id="loading-bar-fill"></div>
+      </div>
+      <div class="loading-char-name" id="loading-char-name"></div>
+      <div class="loading-avatars" id="loading-avatars"></div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 2: ANIME SELECT ===== -->
+  <div id="screen-select" class="screen active">
+    <div class="select-container">
+      <h2 class="select-title">Choose Your Anime Universe</h2>
+      <div class="anime-grid" id="anime-grid"></div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 3: GAME ===== -->
+  <div id="screen-game" class="screen">
+    <div class="game-header">
+      <div class="game-anime-name" id="game-anime-name"></div>
+      <div class="stat-progress">
+        <span id="stat-progress-text"></span>
+        <div class="progress-dots" id="progress-dots"></div>
+      </div>
+    </div>
+
+    <div class="game-main">
+      <!-- Current stat being filled -->
+      <div class="current-stat-panel">
+        <div class="stat-label-row">
+          <span class="stat-icon-big" id="current-stat-icon"></span>
+          <span class="stat-name-big" id="current-stat-name"></span>
+        </div>
+
+        <!-- Spinner -->
+        <div class="spinner-wrapper">
+          <div class="spinner-fade spinner-fade-top"></div>
+          <div class="spinner-track" id="spinner-track"></div>
+          <div class="spinner-fade spinner-fade-bottom"></div>
+          <div class="spinner-selector"></div>
+        </div>
+
+        <div class="pause-hint" id="pause-hint">
+          <span class="pulse-dot"></span> Press <kbd>SPACE</kbd> or <button class="btn-pause" id="btn-pause" onclick="pauseSpinner()">⏸ PAUSE</button>
+        </div>
+      </div>
+
+      <!-- Already-picked characters -->
+      <div class="picked-panel" id="picked-panel">
+        <div class="picked-title">YOUR BUILD SO FAR</div>
+        <div class="picked-list" id="picked-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 4: RESULTS ===== -->
+  <div id="screen-results" class="screen">
+    <div class="results-container">
+      <div class="results-header">
+        <div class="results-tier-badge" id="results-tier-badge"></div>
+        <div class="results-title">YOUR FINAL BUILD</div>
+        <div class="results-anime-name" id="results-anime-name"></div>
+      </div>
+
+      <div class="results-grid" id="results-grid"></div>
+
+      <div class="results-total">
+        <div class="total-label">TOTAL POWER SCORE</div>
+        <div class="total-score" id="total-score"></div>
+        <div class="total-max" id="total-max">/ 50</div>
+      </div>
+
+      <div class="results-radar-wrapper">
+        <canvas id="radar-canvas" width="320" height="320"></canvas>
+      </div>
+
+      <div class="results-actions">
+        <button class="btn-action" onclick="restartSameAnime()">🔄 Retry Same Anime</button>
+        <button class="btn-action btn-secondary" onclick="showAnimeSelect()">🌐 Pick New Anime</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js" onerror="document.body.innerHTML='<div style=color:red;padding:2rem>ERROR: data.js failed to load. Check GitHub Pages settings.</div>'"></script>
+  <script src="js/game.js" onerror="document.body.innerHTML='<div style=color:red;padding:2rem>ERROR: game.js failed to load. Check GitHub Pages settings.</div>'"></script>
+</body>
+</html>

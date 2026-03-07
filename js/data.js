@@ -1,0 +1,283 @@
+const STATS = ["Strength", "Speed", "Intelligence", "Durability", "Technique"];
+
+const ANIME_DATA = {
+  naruto: {
+    name: "Naruto",
+    malId: 20,
+    color: "#ff6600",
+    accent: "#ff9900",
+    emoji: "🍥",
+    statKeys: ["strength", "speed", "intelligence", "durability", "chakra", "mainJutsu", "taijutsu", "eyes"],
+    characters: [
+      { name: "Naruto Uzumaki",  emoji: "🍥", strength: 9,  speed: 9,  intelligence: 6,  durability: 9,  chakra: 10, chakraName: "Nine-Tails (Kurama)",       mainJutsu: 9,  jutsuName: "Rasenshuriken",          taijutsu: 8,  eyes: 7,  eyeName: "Six Paths Sage Mode" },
+      { name: "Sasuke Uchiha",   emoji: "⚡", strength: 8,  speed: 10, intelligence: 9,  durability: 7,  chakra: 8,  chakraName: "Sharingan Chakra",          mainJutsu: 10, jutsuName: "Indra's Arrow",            taijutsu: 8,  eyes: 10, eyeName: "EMS + Rinnegan" },
+      { name: "Kakashi Hatake",  emoji: "👁️", strength: 7,  speed: 8,  intelligence: 10, durability: 7,  chakra: 7,  chakraName: "Lightning Nature",           mainJutsu: 9,  jutsuName: "Lightning Blade",           taijutsu: 8,  eyes: 9,  eyeName: "Mangekyou Sharingan" },
+      { name: "Itachi Uchiha",   emoji: "🌸", strength: 7,  speed: 9,  intelligence: 10, durability: 7,  chakra: 8,  chakraName: "Fire + Shadow Chakra",      mainJutsu: 10, jutsuName: "Amaterasu / Tsukuyomi",    taijutsu: 7,  eyes: 10, eyeName: "Mangekyou Sharingan" },
+      { name: "Madara Uchiha",   emoji: "🌀", strength: 10, speed: 9,  intelligence: 10, durability: 10, chakra: 10, chakraName: "Six Paths Sage Chakra",    mainJutsu: 10, jutsuName: "Perfect Susanoo",          taijutsu: 10, eyes: 10, eyeName: "EMS + Rinnegan" },
+      { name: "Minato Namikaze", emoji: "🌟", strength: 8,  speed: 10, intelligence: 9,  durability: 8,  chakra: 9,  chakraName: "Nine-Tails Yellow Flash",   mainJutsu: 10, jutsuName: "Flying Thunder God",         taijutsu: 9,  eyes: 0,  eyeName: null },
+      { name: "Rock Lee",        emoji: "💪", strength: 9,  speed: 10, intelligence: 5,  durability: 8,  chakra: 3,  chakraName: "Eight Gates Power",         mainJutsu: 8,  jutsuName: "Eight Inner Gates",          taijutsu: 10, eyes: 0,  eyeName: null },
+      { name: "Gaara",           emoji: "🏜️", strength: 8,  speed: 6,  intelligence: 8,  durability: 10, chakra: 8,  chakraName: "Sand + Shukaku",           mainJutsu: 8,  jutsuName: "Sand Burial",               taijutsu: 4,  eyes: 0,  eyeName: null },
+      { name: "Neji Hyuga",      emoji: "🔮", strength: 7,  speed: 8,  intelligence: 9,  durability: 7,  chakra: 7,  chakraName: "Byakugan Chakra",          mainJutsu: 9,  jutsuName: "Eight Trigrams Palms",       taijutsu: 9,  eyes: 8,  eyeName: "Byakugan" },
+      { name: "Sakura Haruno",   emoji: "🌺", strength: 8,  speed: 7,  intelligence: 9,  durability: 8,  chakra: 7,  chakraName: "Medical Chakra",           mainJutsu: 8,  jutsuName: "Cherry Blossom Impact",      taijutsu: 8,  eyes: 0,  eyeName: null },
+      { name: "Jiraiya",         emoji: "🐸", strength: 9,  speed: 8,  intelligence: 9,  durability: 9,  chakra: 8,  chakraName: "Toad Sage Mode",           mainJutsu: 9,  jutsuName: "Toad Sage Mode",             taijutsu: 7,  eyes: 0,  eyeName: null },
+      { name: "Obito Uchiha",    emoji: "🌊", strength: 9,  speed: 8,  intelligence: 9,  durability: 9,  chakra: 9,  chakraName: "Ten-Tails Chakra",         mainJutsu: 9,  jutsuName: "Kamui",                     taijutsu: 7,  eyes: 10, eyeName: "Mangekyou + Rinnegan" },
+    ]
+  },
+  dbz: {
+    name: "Dragon Ball Z",
+    malId: 813,
+    extraMalId: 30694,
+    color: "#f5c518",
+    accent: "#ff4500",
+    emoji: "💥",
+    statKeys: ["strength", "speed", "intelligence", "durability", "technique", "ki", "form"],
+    characters: [
+      { name: "Goku",     malCharId: 246,   malName: "Son Goku",    searchQuery: "Son Goku Dragon Ball Z", emoji: "🔵", strength: 10, speed: 10, intelligence: 6,  durability: 10, technique: 9,  ki: 10, form: 10, formName: "Mastered Ultra Instinct" },
+      { name: "Vegeta",   emoji: "🟠", strength: 9,  speed: 9,  intelligence: 7,  durability: 9,  technique: 8,  ki: 9,  form: 9,  formName: "Ultra Ego"              },
+      { name: "Piccolo",  emoji: "🟢", strength: 8,  speed: 8,  intelligence: 9,  durability: 8,  technique: 8,  ki: 7,  form: 8,  formName: "Orange Piccolo"         },
+      { name: "Gohan",    malName: "Son Gohan",   emoji: "⭐", strength: 9,  speed: 9,  intelligence: 9,  durability: 8,  technique: 8,  ki: 9,  form: 9,  formName: "Gohan Beast"            },
+      { name: "Trunks",   malName: "Trunks Brief",emoji: "⚔️", strength: 8,  speed: 9,  intelligence: 7,  durability: 8,  technique: 8,  ki: 8,  form: 8,  formName: "Super Saiyan Rage"      },
+      { name: "Frieza",   malName: "Freeza",      emoji: "👑", strength: 9,  speed: 10, intelligence: 9,  durability: 9,  technique: 9,  ki: 9,  form: 9,  formName: "Black Frieza"           },
+      { name: "Cell",     emoji: "🧬", strength: 9,  speed: 9,  intelligence: 9,  durability: 9,  technique: 9,  ki: 8,  form: 8,  formName: "Perfect Cell"           },
+      { name: "Broly",    emoji: "💪", strength: 10, speed: 8,  intelligence: 4,  durability: 10, technique: 6,  ki: 10, form: 9,  formName: "Legendary Super Saiyan"  },
+      { name: "Beerus",   emoji: "😺", strength: 10, speed: 10, intelligence: 8,  durability: 10, technique: 10, ki: 10, form: 10, formName: "God of Destruction"     },
+      { name: "Whis",     emoji: "🌟", strength: 10, speed: 10, intelligence: 10, durability: 10, technique: 10, ki: 10, form: 10, formName: "Angel True Form"        },
+      { name: "Krillin",  malName: "Kuririn",     emoji: "🥚", strength: 5,  speed: 7,  intelligence: 7,  durability: 6,  technique: 8,  ki: 5,  form: 6,  formName: "Full Potential"         },
+      { name: "Gotenks",  emoji: "⚡", strength: 9,  speed: 10, intelligence: 5,  durability: 8,  technique: 7,  ki: 9,  form: 9,  formName: "SSJ3 Gotenks"           },
+    ]
+  },
+  onepiece: {
+    name: "One Piece",
+    malId: 21,
+    color: "#d32f2f",
+    accent: "#ff6b35",
+    emoji: "🏴‍☠️",
+    statKeys: ["strength", "speed", "intelligence", "durability", "devilFruit", "haki"],
+    characters: [
+      { name: "Monkey D. Luffy", emoji: "👒", strength: 9,  speed: 9,  intelligence: 6,  durability: 10, devilFruit: 10, devilFruitName: "Hito Hito no Mi: Nika",  haki: 10, hakiName: "Conqueror's + Armament + Observation" },
+      { name: "Roronoa Zoro",    emoji: "⚔️", strength: 10, speed: 8,  intelligence: 7,  durability: 9,  devilFruit: 0,  devilFruitName: null,                       haki: 9,  hakiName: "Conqueror's + Armament" },
+      { name: "Sanji",           emoji: "🦵", strength: 8,  speed: 10, intelligence: 8,  durability: 8,  devilFruit: 0,  devilFruitName: null,                       haki: 8,  hakiName: "Observation + Armament" },
+      { name: "Shanks",          emoji: "🍺", strength: 10, speed: 9,  intelligence: 9,  durability: 9,  devilFruit: 0,  devilFruitName: null,                       haki: 10, hakiName: "Conqueror's (God-level)" },
+      { name: "Whitebeard",      malName: "Edward Newgate",         emoji: "🌊", strength: 10, speed: 7,  intelligence: 9,  durability: 10, devilFruit: 9,  devilFruitName: "Gura Gura no Mi",          haki: 10, hakiName: "Conqueror's + Armament" },
+      { name: "Trafalgar Law",   malName: "Trafalgar D. Water Law", searchQuery: "Trafalgar Law One Piece", emoji: "💊", strength: 8,  speed: 8,  intelligence: 10, durability: 7,  devilFruit: 9,  devilFruitName: "Ope Ope no Mi",             haki: 7,  hakiName: "Armament + Observation" },
+      { name: "Boa Hancock",     emoji: "🐍", strength: 9,  speed: 8,  intelligence: 8,  durability: 8,  devilFruit: 8,  devilFruitName: "Mero Mero no Mi",          haki: 8,  hakiName: "Conqueror's + Armament" },
+      { name: "Kizaru",          malName: "Borsalino",              emoji: "✨", strength: 9,  speed: 10, intelligence: 7,  durability: 9,  devilFruit: 10, devilFruitName: "Pika Pika no Mi",           haki: 8,  hakiName: "Armament" },
+      { name: "Crocodile",       emoji: "🏜️", strength: 8,  speed: 7,  intelligence: 9,  durability: 8,  devilFruit: 8,  devilFruitName: "Suna Suna no Mi",           haki: 6,  hakiName: "Armament" },
+      { name: "Dracule Mihawk",  emoji: "🦅", strength: 9,  speed: 9,  intelligence: 9,  durability: 8,  devilFruit: 0,  devilFruitName: null,                       haki: 9,  hakiName: "Armament (Supreme Grade)" },
+      { name: "Ace",             malName: "Portgas D. Ace",         emoji: "🔥", strength: 8,  speed: 8,  intelligence: 7,  durability: 8,  devilFruit: 8,  devilFruitName: "Mera Mera no Mi",           haki: 7,  hakiName: "Conqueror's + Armament" },
+      { name: "Jinbei",          malName: "Jinbe",                  emoji: "🐋", strength: 9,  speed: 7,  intelligence: 8,  durability: 10, devilFruit: 0,  devilFruitName: null,                       haki: 8,  hakiName: "Armament + Observation" },
+    ]
+  },
+  mha: {
+    name: "My Hero Academia",
+    malId: 31964,
+    color: "#1565c0",
+    accent: "#00bcd4",
+    emoji: "💚",
+    statKeys: ["strength", "speed", "intelligence", "durability", "technique", "quirk"],
+    characters: [
+      { name: "Izuku Midoriya",  emoji: "💚", strength: 9,  speed: 9,  intelligence: 9,  durability: 8,  technique: 9,  quirk: 10, quirkName: "One For All" },
+      { name: "Katsuki Bakugo",  emoji: "💥", strength: 9,  speed: 9,  intelligence: 8,  durability: 8,  technique: 9,  quirk: 9,  quirkName: "Explosion" },
+      { name: "Shoto Todoroki",  emoji: "❄️", strength: 9,  speed: 8,  intelligence: 8,  durability: 8,  technique: 9,  quirk: 9,  quirkName: "Half-Cold Half-Hot" },
+      { name: "All Might",       malName: "Toshinori Yagi",    emoji: "⭐", strength: 10, speed: 10, intelligence: 8,  durability: 10, technique: 9,  quirk: 10, quirkName: "One For All (Prime)" },
+      { name: "Endeavor",        malName: "Enji Todoroki",    emoji: "🔥", strength: 9,  speed: 8,  intelligence: 8,  durability: 9,  technique: 9,  quirk: 9,  quirkName: "Hellflame" },
+      { name: "Hawks",           malName: "Keigo Takami",     emoji: "🦅", strength: 7,  speed: 10, intelligence: 9,  durability: 7,  technique: 9,  quirk: 8,  quirkName: "Fierce Wings" },
+      { name: "Mirio Togata",    emoji: "😄", strength: 9,  speed: 9,  intelligence: 8,  durability: 8,  technique: 10, quirk: 10, quirkName: "Permeation" },
+      { name: "Shigaraki",       malName: "Tomura Shigaraki", emoji: "🖐️", strength: 8,  speed: 7,  intelligence: 9,  durability: 8,  technique: 9,  quirk: 10, quirkName: "Decay" },
+      { name: "Aizawa",          malName: "Shouta Aizawa",    emoji: "👁️", strength: 7,  speed: 8,  intelligence: 10, durability: 7,  technique: 10, quirk: 9,  quirkName: "Erasure" },
+      { name: "All For One",     emoji: "😈", strength: 10, speed: 8,  intelligence: 10, durability: 10, technique: 10, quirk: 10, quirkName: "All For One" },
+      { name: "Overhaul",        malName: "Kai Chisaki",      emoji: "💊", strength: 9,  speed: 7,  intelligence: 9,  durability: 8,  technique: 10, quirk: 9,  quirkName: "Overhaul" },
+      { name: "Re-Destro",       malName: "Rikiya Yotsubashi",emoji: "😤", strength: 9,  speed: 7,  intelligence: 8,  durability: 9,  technique: 7,  quirk: 9,  quirkName: "Stress" },
+    ]
+  },
+  aot: {
+    name: "Attack on Titan",
+    malId: 16498,
+    color: "#37474f",
+    accent: "#b71c1c",
+    emoji: "⚔️",
+    characters: [
+      { name: "Levi Ackerman",    malCharId: 45627, malName: "Levi Ackermann",  emoji: "⚔️", strength: 9,  speed: 10, intelligence: 9,  durability: 8,  technique: 10 },
+      { name: "Eren Yeager",      emoji: "🔥", strength: 10, speed: 8,  intelligence: 8,  durability: 10, technique: 7  },
+      { name: "Mikasa Ackerman",  emoji: "🩸", strength: 9,  speed: 9,  intelligence: 8,  durability: 9,  technique: 9  },
+      { name: "Armin Arlert",     emoji: "💡", strength: 5,  speed: 6,  intelligence: 10, durability: 5,  technique: 7  },
+      { name: "Reiner Braun",     emoji: "🛡️", strength: 10, speed: 7,  intelligence: 7,  durability: 10, technique: 7  },
+      { name: "Annie Leonhart",   emoji: "🥋", strength: 8,  speed: 9,  intelligence: 8,  durability: 8,  technique: 10 },
+      { name: "Erwin Smith",      emoji: "👁️", strength: 7,  speed: 7,  intelligence: 10, durability: 7,  technique: 8  },
+      { name: "Zeke Yeager",      emoji: "🐒", strength: 9,  speed: 8,  intelligence: 9,  durability: 9,  technique: 9  },
+      { name: "Hange Zoë",        malName: "Hanji Zoe",          emoji: "🔬", strength: 7,  speed: 7,  intelligence: 10, durability: 7,  technique: 8  },
+      { name: "Ymir",             emoji: "🦷", strength: 8,  speed: 8,  intelligence: 7,  durability: 8,  technique: 7  },
+      { name: "Bertholdt Hoover", malName: "Bertolt Hoover",      emoji: "💨", strength: 9,  speed: 7,  intelligence: 7,  durability: 9,  technique: 7  },
+      { name: "Kenny Ackerman",   emoji: "🎩", strength: 8,  speed: 9,  intelligence: 9,  durability: 7,  technique: 9  },
+    ]
+  },
+  jjk: {
+    name: "Jujutsu Kaisen",
+    malId: 40748,
+    color: "#6a0dad",
+    accent: "#00bcd4",
+    emoji: "🔮",
+    statKeys: ["strength", "speed", "intelligence", "durability", "cursedTechnique", "cursedEnergy", "domainExpansion"],
+    characters: [
+      { name: "Yuji Itadori",    malCharId: 163847, emoji: "👊", strength: 10, speed: 9,  intelligence: 7,  durability: 10, cursedTechnique: 8,  ctName: "Divergent Fist",           cursedEnergy: 9,  domainExpansion: 3,  domainName: null },
+      { name: "Satoru Gojo",     malCharId: 164471, emoji: "🌀", strength: 10, speed: 10, intelligence: 10, durability: 10, cursedTechnique: 10, ctName: "Limitless (Infinity)",      cursedEnergy: 10, domainExpansion: 10, domainName: "Unlimited Void" },
+      { name: "Megumi Fushiguro",malCharId: 164470, emoji: "🐕", strength: 8,  speed: 8,  intelligence: 9,  durability: 7,  cursedTechnique: 10, ctName: "Ten Shadows Technique",    cursedEnergy: 8,  domainExpansion: 8,  domainName: "Chimera Shadow Garden" },
+      { name: "Nobara Kugisaki", malCharId: 164472, emoji: "🔨", strength: 8,  speed: 8,  intelligence: 8,  durability: 8,  cursedTechnique: 9,  ctName: "Straw Doll Technique",     cursedEnergy: 7,  domainExpansion: 0,  domainName: null },
+      { name: "Ryomen Sukuna",   malCharId: 175198, emoji: "👹", strength: 10, speed: 10, intelligence: 10, durability: 10, cursedTechnique: 10, ctName: "Shrine (Malevolent Kitchen)",cursedEnergy: 10, domainExpansion: 10, domainName: "Malevolent Shrine" },
+      { name: "Suguru Geto",     malCharId: 175542, emoji: "😈", strength: 9,  speed: 8,  intelligence: 10, durability: 8,  cursedTechnique: 10, ctName: "Cursed Spirit Manipulation",cursedEnergy: 9,  domainExpansion: 0,  domainName: null },
+      { name: "Kento Nanami",    malCharId: 164473, emoji: "👔", strength: 8,  speed: 7,  intelligence: 9,  durability: 8,  cursedTechnique: 9,  ctName: "Ratio Technique",          cursedEnergy: 8,  domainExpansion: 0,  domainName: null },
+      { name: "Aoi Todo",        malCharId: 164484, emoji: "💜", strength: 10, speed: 9,  intelligence: 7,  durability: 9,  cursedTechnique: 9,  ctName: "Boogie Woogie",            cursedEnergy: 8,  domainExpansion: 0,  domainName: null },
+      { name: "Toge Inumaki",    malCharId: 164478, emoji: "🍙", strength: 7,  speed: 8,  intelligence: 8,  durability: 7,  cursedTechnique: 10, ctName: "Cursed Speech",            cursedEnergy: 7,  domainExpansion: 0,  domainName: null },
+      { name: "Maki Zenin",      malCharId: 164482, emoji: "🗡️", strength: 9,  speed: 10, intelligence: 8,  durability: 8,  cursedTechnique: 9,  ctName: "Heavenly Restriction",     cursedEnergy: 1,  domainExpansion: 0,  domainName: null },
+      { name: "Mahito",          malCharId: 164481, emoji: "🩹", strength: 9,  speed: 8,  intelligence: 9,  durability: 9,  cursedTechnique: 10, ctName: "Idle Transfiguration",    cursedEnergy: 9,  domainExpansion: 9,  domainName: "Self-Embodiment of Perfection" },
+      { name: "Yuta Okkotsu",    malCharId: 168067, emoji: "⚡", strength: 10, speed: 9,  intelligence: 8,  durability: 9,  cursedTechnique: 10, ctName: "Copy + Rika",              cursedEnergy: 10, domainExpansion: 9,  domainName: "Authentic Mutual Love" },
+    ]
+  },
+  demonslayer: {
+    name: "Demon Slayer",
+    malId: 38000,
+    color: "#7b1fa2",
+    accent: "#e91e63",
+    emoji: "🗡️",
+    statKeys: ["strength", "speed", "intelligence", "durability", "breathingStyle"],
+    characters: [
+      { name: "Tanjiro Kamado",    emoji: "🌊", strength: 8,  speed: 9,  intelligence: 8,  durability: 9,  breathingStyle: 10, breathingName: "Hinokami Kagura (Sun Breathing)" },
+      { name: "Inosuke Hashibira", emoji: "🐗", strength: 9,  speed: 9,  intelligence: 4,  durability: 9,  breathingStyle: 8,  breathingName: "Beast Breathing" },
+      { name: "Zenitsu Agatsuma",  emoji: "⚡", strength: 6,  speed: 10, intelligence: 6,  durability: 6,  breathingStyle: 9,  breathingName: "Thunder Breathing" },
+      { name: "Rengoku",           malName: "Kyoujurou Rengoku", emoji: "🔥", strength: 9,  speed: 9,  intelligence: 8,  durability: 9,  breathingStyle: 10, breathingName: "Flame Breathing" },
+      { name: "Tengen Uzui",       emoji: "💎", strength: 8,  speed: 10, intelligence: 8,  durability: 8,  breathingStyle: 10, breathingName: "Sound Breathing" },
+      { name: "Shinobu Kocho",     emoji: "🦋", strength: 5,  speed: 10, intelligence: 10, durability: 5,  breathingStyle: 10, breathingName: "Insect Breathing" },
+      { name: "Muzan Kibutsuji",   emoji: "😈", strength: 10, speed: 10, intelligence: 10, durability: 10, breathingStyle: 0,  breathingName: null },
+      { name: "Gyomei Himejima",   emoji: "🪨", strength: 10, speed: 8,  intelligence: 8,  durability: 10, breathingStyle: 10, breathingName: "Stone Breathing" },
+      { name: "Sanemi Shinazugawa",emoji: "💨", strength: 9,  speed: 9,  intelligence: 7,  durability: 9,  breathingStyle: 9,  breathingName: "Wind Breathing" },
+      { name: "Kokushibo",         malName: "Kokushibou", emoji: "🌙", strength: 10, speed: 10, intelligence: 9,  durability: 10, breathingStyle: 10, breathingName: "Moon Breathing" },
+      { name: "Doma",              malName: "Douma",      emoji: "❄️", strength: 9,  speed: 9,  intelligence: 8,  durability: 9,  breathingStyle: 0,  breathingName: null },
+      { name: "Akaza",             emoji: "🌸", strength: 10, speed: 10, intelligence: 7,  durability: 9,  breathingStyle: 0,  breathingName: null },
+    ]
+  },
+  bleach: {
+    name: "Bleach",
+    malId: 269,
+    color: "#ff6500",
+    accent: "#1a1a2e",
+    emoji: "🧡",
+    statKeys: ["strength", "speed", "intelligence", "durability", "reiatsu", "zanpakuto", "bankai"],
+    characters: [
+      { name: "Ichigo Kurosaki",   emoji: "🧡", strength: 10, speed: 10, intelligence: 6,  durability: 9,  reiatsu: 10, reiName: "Hollow / Soul King",          zanpakuto: 10, zanpakutoName: "Zangetsu",                    bankai: 10, bankaiName: "True Bankai: Tensa Zangetsu" },
+      { name: "Rukia Kuchiki",     emoji: "❄️", strength: 6,  speed: 7,  intelligence: 8,  durability: 6,  reiatsu: 7,  reiName: "Ice-type Reiatsu",           zanpakuto: 8,  zanpakutoName: "Sode no Shirayuki",          bankai: 8,  bankaiName: "Hakka no Togame" },
+      { name: "Byakuya Kuchiki",   emoji: "🌸", strength: 8,  speed: 9,  intelligence: 9,  durability: 7,  reiatsu: 9,  reiName: "Noble Reiatsu",             zanpakuto: 9,  zanpakutoName: "Senbonzakura",               bankai: 10, bankaiName: "Senbonzakura Kageyoshi" },
+      { name: "Kenpachi Zaraki",   malName: "Zaraki Kenpachi",       emoji: "💀", strength: 10, speed: 9,  intelligence: 4,  durability: 10, reiatsu: 10, reiName: "Primordial Reiatsu",         zanpakuto: 10, zanpakutoName: "Nozarashi",                   bankai: 9,  bankaiName: "Nozarashi (Bankai)" },
+      { name: "Sosuke Aizen",      malName: "Aizen Sousuke",         emoji: "🦋", strength: 9,  speed: 10, intelligence: 10, durability: 10, reiatsu: 10, reiName: "Hogyoku-infused Reiatsu",    zanpakuto: 10, zanpakutoName: "Kyoka Suigetsu",             bankai: 0,  bankaiName: null },
+      { name: "Yhwach",            malName: "Juha Bach",             emoji: "👑", strength: 10, speed: 9,  intelligence: 10, durability: 10, reiatsu: 10, reiName: "Soul King Reiatsu",          zanpakuto: 9,  zanpakutoName: "Ausw\u00e4hlen",                    bankai: 0,  bankaiName: null },
+      { name: "Kisuke Urahara",    emoji: "🎩", strength: 8,  speed: 9,  intelligence: 10, durability: 7,  reiatsu: 8,  reiName: "Genius-level Reiatsu",       zanpakuto: 9,  zanpakutoName: "Benihime",                    bankai: 8,  bankaiName: "Kannonbiraki Benihime Aratame" },
+      { name: "Grimmjow",          malName: "Grimmjow Jaegerjaquez", emoji: "🐆", strength: 9,  speed: 10, intelligence: 6,  durability: 8,  reiatsu: 8,  reiName: "Espada Reiatsu",             zanpakuto: 9,  zanpakutoName: "Pantera",                     bankai: 9,  bankaiName: "Pantera (Resurrecci\u00f3n)" },
+      { name: "Ulquiorra Cifer",   emoji: "💙", strength: 9,  speed: 9,  intelligence: 8,  durability: 9,  reiatsu: 9,  reiName: "4th Espada Reiatsu",         zanpakuto: 9,  zanpakutoName: "Murci\u00e9lago",                  bankai: 10, bankaiName: "Segunda Etapa" },
+      { name: "Toshiro Hitsugaya", malName: "Toushirou Hitsugaya",   emoji: "🧊", strength: 8,  speed: 9,  intelligence: 9,  durability: 7,  reiatsu: 8,  reiName: "Ice-type Reiatsu",           zanpakuto: 9,  zanpakutoName: "Hyorinmaru",                  bankai: 9,  bankaiName: "Daiguren Hyorinmaru" },
+      { name: "Yoruichi Shihoin",  malName: "Yoruichi Shihouin",     emoji: "⚡", strength: 9,  speed: 10, intelligence: 9,  durability: 8,  reiatsu: 8,  reiName: "Flash Goddess Reiatsu",      zanpakuto: 7,  zanpakutoName: "Unknown",                     bankai: 0,  bankaiName: null },
+      { name: "Gin Ichimaru",      emoji: "🦊", strength: 8,  speed: 10, intelligence: 9,  durability: 7,  reiatsu: 8,  reiName: "Fox-type Reiatsu",           zanpakuto: 9,  zanpakutoName: "Shinso",                      bankai: 9,  bankaiName: "Kamishini no Yari" },
+    ]
+  },
+  hxh: {
+    name: "Hunter x Hunter",
+    malId: 11061,
+    color: "#00acc1",
+    accent: "#80deea",
+    emoji: "🎯",
+    statKeys: ["strength", "speed", "intelligence", "durability", "nen", "hatsu"],
+    characters: [
+      { name: "Gon Freecss",      malName: "Gon Freecs",         emoji: "🎣", strength: 9,  speed: 9,  intelligence: 6,  durability: 9,  nen: 9,  nenType: "Enhancer",             hatsu: 9,  hatsuName: "Jajanken" },
+      { name: "Killua Zoldyck",   emoji: "⚡", strength: 8,  speed: 10, intelligence: 9,  durability: 7,  nen: 9,  nenType: "Transmuter",           hatsu: 10, hatsuName: "Godspeed" },
+      { name: "Kurapika",         emoji: "⛓️", strength: 7,  speed: 8,  intelligence: 10, durability: 7,  nen: 8,  nenType: "Conjurer/Specialist",   hatsu: 10, hatsuName: "Chain Jail" },
+      { name: "Leorio",           malName: "Leorio Paladiknight", emoji: "💼", strength: 6,  speed: 6,  intelligence: 8,  durability: 6,  nen: 5,  nenType: "Emitter",              hatsu: 6,  hatsuName: "Punch Projection" },
+      { name: "Hisoka",           malName: "Hisoka Morrow",      emoji: "🃏", strength: 9,  speed: 9,  intelligence: 9,  durability: 8,  nen: 10, nenType: "Transmuter",           hatsu: 10, hatsuName: "Bungee Gum" },
+      { name: "Illumi Zoldyck",   emoji: "🪡", strength: 8,  speed: 8,  intelligence: 9,  durability: 7,  nen: 9,  nenType: "Manipulator",          hatsu: 9,  hatsuName: "Needle People" },
+      { name: "Chrollo Lucilfer", malName: "Kuroro Lucifer",     emoji: "📖", strength: 8,  speed: 9,  intelligence: 10, durability: 7,  nen: 10, nenType: "Specialist",           hatsu: 10, hatsuName: "Skill Hunter" },
+      { name: "Meruem",           emoji: "👑", strength: 10, speed: 10, intelligence: 10, durability: 10, nen: 10, nenType: "Specialist",           hatsu: 10, hatsuName: "Nen Absorption" },
+      { name: "Neferpitou",       malName: "Neferpitu",          emoji: "🐱", strength: 9,  speed: 10, intelligence: 8,  durability: 9,  nen: 9,  nenType: "Specialist",           hatsu: 9,  hatsuName: "Doctor Blythe" },
+      { name: "Feitan",           malName: "Feitan Portor",      emoji: "☂️", strength: 8,  speed: 10, intelligence: 7,  durability: 7,  nen: 8,  nenType: "Transmuter",           hatsu: 9,  hatsuName: "Pain Packer" },
+      { name: "Netero",           malName: "Isaac Netero",       emoji: "🙏", strength: 9,  speed: 10, intelligence: 9,  durability: 9,  nen: 10, nenType: "Enhancer",             hatsu: 10, hatsuName: "100-Type Guanyin" },
+      { name: "Zeno Zoldyck",     emoji: "🐉", strength: 9,  speed: 9,  intelligence: 9,  durability: 8,  nen: 9,  nenType: "Transmuter",           hatsu: 9,  hatsuName: "Dragon Head" },
+    ]
+  },
+  chainsawman: {
+    name: "Chainsaw Man",
+    malId: 50265,
+    color: "#e53935",
+    accent: "#ff8a65",
+    emoji: "🔪",
+    statKeys: ["strength", "speed", "intelligence", "durability", "devilPower", "contract"],
+    characters: [
+      { name: "Denji",          emoji: "🔪", strength: 9,  speed: 8,  intelligence: 4,  durability: 10, devilPower: 10, devilName: "Chainsaw Devil",        contract: 10, contractName: "Pochita (Heart Contract)" },
+      { name: "Power",          emoji: "🩸", strength: 9,  speed: 7,  intelligence: 4,  durability: 9,  devilPower: 9,  devilName: "Blood Devil",           contract: 8,  contractName: "Blood Manipulation" },
+      { name: "Aki Hayakawa",   emoji: "🦊", strength: 7,  speed: 7,  intelligence: 8,  durability: 7,  devilPower: 7,  devilName: "Future Devil",          contract: 8,  contractName: "Future Devil Contract" },
+      { name: "Makima",         emoji: "🎯", strength: 9,  speed: 8,  intelligence: 10, durability: 10, devilPower: 10, devilName: "Control Devil",         contract: 10, contractName: "Control (Domination)" },
+      { name: "Reze",           emoji: "💣", strength: 8,  speed: 9,  intelligence: 8,  durability: 8,  devilPower: 9,  devilName: "Bomb Devil",            contract: 9,  contractName: "Bomb Transformation" },
+      { name: "Himeno",         emoji: "👻", strength: 6,  speed: 6,  intelligence: 8,  durability: 6,  devilPower: 7,  devilName: "Ghost Devil",           contract: 7,  contractName: "Right Hand of Ghost Devil" },
+      { name: "Quanxi",         emoji: "🏹", strength: 10, speed: 10, intelligence: 7,  durability: 9,  devilPower: 9,  devilName: "Crossbow Devil",        contract: 9,  contractName: "Crossbow Transformation" },
+      { name: "Darkness Devil", emoji: "🌑", strength: 10, speed: 9,  intelligence: 9,  durability: 10, devilPower: 10, devilName: "Primal Fear Devil",     contract: 0,  contractName: "Pure Devil (No Contract)" },
+      { name: "Katana Man",     malName: "Samurai Sword",      emoji: "⚔️", strength: 8,  speed: 9,  intelligence: 6,  durability: 7,  devilPower: 8,  devilName: "Katana Devil",          contract: 8,  contractName: "Katana Transformation" },
+      { name: "Violence Fiend", malName: "Galgali",            emoji: "😤", strength: 9,  speed: 8,  intelligence: 6,  durability: 9,  devilPower: 8,  devilName: "Violence Devil",        contract: 0,  contractName: "Fiend (No Contract)" },
+      { name: "Angel Devil",    emoji: "😇", strength: 6,  speed: 7,  intelligence: 8,  durability: 8,  devilPower: 9,  devilName: "Angel Devil",           contract: 0,  contractName: "Fiend (No Contract)" },
+      { name: "Kobeni",         malName: "Kobeni Higashiyama", emoji: "🙏", strength: 6,  speed: 9,  intelligence: 6,  durability: 5,  devilPower: 4,  devilName: "Unknown Devil",         contract: 4,  contractName: "Unknown Contract" },
+    ]
+  },
+  opm: {
+    name: "One Punch Man",
+    malId: 30276,
+    color: "#f9a825",
+    accent: "#ef6c00",
+    emoji: "👊",
+    statKeys: ["strength", "speed", "intelligence", "durability", "technique", "heroRank"],
+    characters: [
+      { name: "Saitama",        emoji: "👊", strength: 10, speed: 10, intelligence: 7,  durability: 10, technique: 6,  heroRank: 8,  rankName: "B-Class → A-Class" },
+      { name: "Genos",          emoji: "🤖", strength: 8,  speed: 9,  intelligence: 8,  durability: 8,  technique: 9,  heroRank: 7,  rankName: "S-Class Rank 14" },
+      { name: "Bang",           malName: "Bang",           emoji: "👴", strength: 9,  speed: 9,  intelligence: 8,  durability: 8,  technique: 10, heroRank: 9,  rankName: "S-Class Rank 3" },
+      { name: "Tatsumaki",      malName: "Terrible Tornado", emoji: "🌪️", strength: 7,  speed: 9,  intelligence: 8,  durability: 8,  technique: 10, heroRank: 10, rankName: "S-Class Rank 2" },
+      { name: "Garou",          emoji: "🐺", strength: 9,  speed: 10, intelligence: 8,  durability: 9,  technique: 10, heroRank: 5,  rankName: "Monster King" },
+      { name: "Boros",          emoji: "👁️", strength: 10, speed: 10, intelligence: 7,  durability: 10, technique: 8,  heroRank: 0,  rankName: "Alien Conqueror" },
+      { name: "Blast",          emoji: "⭐", strength: 10, speed: 10, intelligence: 9,  durability: 10, technique: 10, heroRank: 10, rankName: "S-Class Rank 1" },
+      { name: "Atomic Samurai", malName: "Kamikaze",       emoji: "⚔️", strength: 8,  speed: 10, intelligence: 7,  durability: 7,  technique: 10, heroRank: 9,  rankName: "S-Class Rank 4" },
+      { name: "Flashy Flash",   emoji: "⚡", strength: 8,  speed: 10, intelligence: 7,  durability: 7,  technique: 10, heroRank: 7,  rankName: "S-Class Rank 13" },
+      { name: "King",           emoji: "👑", strength: 1,  speed: 1,  intelligence: 7,  durability: 1,  technique: 1,  heroRank: 9,  rankName: "S-Class Rank 7 (The Strongest)" },
+      { name: "Metal Bat",      malName: "Bad",            emoji: "🦷", strength: 9,  speed: 8,  intelligence: 5,  durability: 9,  technique: 7,  heroRank: 7,  rankName: "S-Class Rank 15" },
+      { name: "Sweet Mask",     malName: "Amai Mask",      emoji: "😍", strength: 8,  speed: 8,  intelligence: 7,  durability: 7,  technique: 8,  heroRank: 6,  rankName: "A-Class Rank 1" },
+    ]
+  },
+  blackclover: {
+    name: "Black Clover",
+    malId: 34572,
+    color: "#1b5e20",
+    accent: "#76ff03",
+    emoji: "♣️",
+    statKeys: ["strength", "speed", "intelligence", "durability", "magic", "grimoire"],
+    characters: [
+      { name: "Asta",                emoji: "⚫", strength: 9,  speed: 9,  intelligence: 6,  durability: 9,  magic: 10, magicName: "Anti-Magic",        grimoire: 10, grimoireName: "Five-Leaf Grimoire" },
+      { name: "Yuno",                emoji: "⭐", strength: 8,  speed: 10, intelligence: 8,  durability: 7,  magic: 9,  magicName: "Wind + Star Magic",  grimoire: 10, grimoireName: "Four-Leaf Star Grimoire" },
+      { name: "Yami Sukehiro",       emoji: "🌑", strength: 10, speed: 9,  intelligence: 7,  durability: 9,  magic: 10, magicName: "Dark Magic",         grimoire: 9,  grimoireName: "Four-Leaf Grimoire" },
+      { name: "Julius Novachrono",   emoji: "⏳", strength: 7,  speed: 10, intelligence: 10, durability: 8,  magic: 10, magicName: "Time Magic",         grimoire: 10, grimoireName: "Grand Magic Emperor" },
+      { name: "Noelle Silva",        emoji: "🌊", strength: 7,  speed: 7,  intelligence: 7,  durability: 7,  magic: 8,  magicName: "Water Magic",        grimoire: 8,  grimoireName: "Three-Leaf Grimoire" },
+      { name: "Luck Voltia",         emoji: "⚡", strength: 8,  speed: 10, intelligence: 6,  durability: 7,  magic: 8,  magicName: "Lightning Magic",    grimoire: 7,  grimoireName: "Three-Leaf Grimoire" },
+      { name: "Fuegoleon Vermillion",emoji: "🔥", strength: 9,  speed: 8,  intelligence: 8,  durability: 8,  magic: 9,  magicName: "Fire Magic",         grimoire: 9,  grimoireName: "Four-Leaf Grimoire" },
+      { name: "Mereoleona",          malName: "Mereolaona Vermillion", emoji: "🦁", strength: 10, speed: 9,  intelligence: 7,  durability: 9,  magic: 9,  magicName: "Fire + Mana Zone",   grimoire: 8,  grimoireName: "Four-Leaf Grimoire" },
+      { name: "William Vangeance",   emoji: "🌳", strength: 8,  speed: 7,  intelligence: 9,  durability: 8,  magic: 9,  magicName: "World Tree Magic",   grimoire: 9,  grimoireName: "Four-Leaf Grimoire" },
+      { name: "Licht",               emoji: "✨", strength: 9,  speed: 10, intelligence: 8,  durability: 8,  magic: 10, magicName: "Sword Magic",        grimoire: 10, grimoireName: "Five-Leaf Grimoire" },
+      { name: "Zenon Zogratis",      emoji: "💀", strength: 9,  speed: 8,  intelligence: 8,  durability: 9,  magic: 9,  magicName: "Bone Magic",         grimoire: 9,  grimoireName: "Devil Union: Beelzebub" },
+      { name: "Dante Zogratis",      emoji: "😈", strength: 9,  speed: 7,  intelligence: 8,  durability: 10, magic: 9,  magicName: "Gravity Magic",      grimoire: 9,  grimoireName: "Devil Union: Lucifero" },
+    ]
+  }
+};
+
+const STAT_KEYS = ["strength", "speed", "intelligence", "durability", "technique"];
+const STAT_ICONS  = { strength: "💪", speed: "⚡", intelligence: "🧠", durability: "🛡️", technique: "✨", ki: "🔆", form: "💫", cursedTechnique: "🔮", cursedEnergy: "☄️", domainExpansion: "🌐", breathingStyle: "🌬️", devilFruit: "🐈", haki: "💠", chakra: "🔥", mainJutsu: "🌀", taijutsu: "🥊", eyes: "👁️", quirk: "🧲", reiatsu: "🌊", zanpakuto: "⚔️", bankai: "🔮", nen: "💎", hatsu: "✅", devilPower: "☠️", contract: "📜", heroRank: "🏆", magic: "🪄", grimoire: "📖" };
+const STAT_COLORS = { strength: "#ff4757", speed: "#ffa502", intelligence: "#2ed573", durability: "#1e90ff", technique: "#a29bfe", ki: "#ff6b81", form: "#fdcb6e", cursedTechnique: "#b44fff", cursedEnergy: "#00e5ff", domainExpansion: "#ff9a3c", breathingStyle: "#ff6b9d", devilFruit: "#ff4ecd", haki: "#c8a2c8", chakra: "#ff6600", mainJutsu: "#ff9900", taijutsu: "#e84393", eyes: "#9b59b6", quirk: "#00bcd4", reiatsu: "#1abc9c", zanpakuto: "#e74c3c", bankai: "#8e44ad", nen: "#e67e22", hatsu: "#27ae60", devilPower: "#c0392b", contract: "#9b59b6", heroRank: "#f39c12", magic: "#2ecc71", grimoire: "#3498db" };
+const STAT_LABELS = { strength: "Strength", speed: "Speed", intelligence: "Intelligence", durability: "Durability", technique: "Technique", ki: "Ki", form: "Form", cursedTechnique: "Cursed Technique", cursedEnergy: "Cursed Energy", domainExpansion: "Domain Expansion", breathingStyle: "Breathing Style", devilFruit: "Devil Fruit", haki: "Haki", chakra: "Chakra", mainJutsu: "Main Jutsu", taijutsu: "Taijutsu", eyes: "Eyes", quirk: "Quirk", reiatsu: "Reiatsu", zanpakuto: "Zanpakuto", bankai: "Bankai", nen: "Nen Type", hatsu: "Hatsu", devilPower: "Devil Power", contract: "Contract", heroRank: "Hero Rank", magic: "Magic", grimoire: "Grimoire" };
+
+function getTier(score, maxScore) {
+  const pct = score / maxScore;
+  if (pct >= 0.91) return { tier: "S", label: "LEGENDARY", color: "#ffd700" };
+  if (pct >= 0.80) return { tier: "A", label: "ELITE",     color: "#c0c0c0" };
+  if (pct >= 0.64) return { tier: "B", label: "STRONG",    color: "#cd7f32" };
+  if (pct >= 0.48) return { tier: "C", label: "AVERAGE",   color: "#74b9ff" };
+  if (pct >= 0.32) return { tier: "D", label: "WEAK",      color: "#a29bfe" };
+  return               { tier: "F", label: "HOPELESS",  color: "#ff7675" };
+}
