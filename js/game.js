@@ -5,11 +5,44 @@
 // ── State ────────────────────────────────────────────────────
 let currentAnime   = null;
 let currentStatIdx = 0;
-let pickedChars    = [];        // [{stat, statKey, character, score}]
+let currentMode    = 'classic'; // 'classic' | 'murderMystery' | 'buildFamily'
+let pickedChars    = [];        // [{stat, statKey, statIcon, statColor, character, score}]
 let spinInterval   = null;
 let spinIndex      = 0;
 let paused         = false;
 let speedMs        = 80;        // ms per card tick
+
+// ── Game Modes ───────────────────────────────────────────────
+const GAME_MODES = {
+  classic: {
+    name: 'Classic Mode', icon: '⚔️', color: '#7c3aed',
+    description: 'Build your ultimate power team based on stats',
+  },
+  murderMystery: {
+    name: 'Murder Mystery', icon: '🔪', color: '#ef4444',
+    description: 'Cast your characters into a gripping murder mystery',
+    roles: [
+      { key: 'murderer',   icon: '🔪', name: 'The Murderer',   color: '#ef4444' },
+      { key: 'detective',  icon: '🕵️', name: 'The Detective',  color: '#06b6d4' },
+      { key: 'victim',     icon: '💀', name: 'The Victim',     color: '#8b5cf6' },
+      { key: 'suspect',    icon: '🫣', name: 'The Suspect',    color: '#f59e0b' },
+      { key: 'witness',    icon: '👁️', name: 'The Witness',    color: '#10b981' },
+      { key: 'mastermind', icon: '🧠', name: 'The Mastermind', color: '#f97316' },
+    ],
+  },
+  buildFamily: {
+    name: 'Build Your Family', icon: '👨‍👩‍👧‍👦', color: '#10b981',
+    description: 'Assemble your perfect anime family',
+    roles: [
+      { key: 'dad',        icon: '👨', name: 'The Dad',          color: '#3b82f6' },
+      { key: 'mom',        icon: '👩', name: 'The Mom',          color: '#ec4899' },
+      { key: 'olderSib',   icon: '🧑', name: 'Older Sibling',    color: '#8b5cf6' },
+      { key: 'youngerSib', icon: '🧒', name: 'Younger Sibling',  color: '#f59e0b' },
+      { key: 'baby',       icon: '👶', name: 'The Baby',         color: '#10b981' },
+      { key: 'mascot',     icon: '🐾', name: 'Family Mascot',    color: '#f97316' },
+    ],
+  },
+};
 
 // ── Image Cache ──────────────────────────────────────────────
 // Maps character name → image URL (populated via Jikan API)
@@ -177,14 +210,21 @@ async function fetchCharacterImages(anime) {
 // Returns the stat keys for the currently active anime (or global default)
 function activeKeys() { return (currentAnime && currentAnime.statKeys) ? currentAnime.statKeys : STAT_KEYS; }
 
+// Returns role objects for the current mode (works for all modes)
+function activeRoles() {
+  if (currentMode !== 'classic') return GAME_MODES[currentMode].roles;
+  return activeKeys().map(k => ({ key: k, icon: STAT_ICONS[k], name: statLabel(k), color: STAT_COLORS[k] }));
+}
+
 // Returns display name for a stat key
 function statLabel(key) { return STAT_LABELS[key] || key; }
 
 // ── Screens ─────────────────────────────────────────────────
 function goHome() {
   if (spinInterval) clearInterval(spinInterval);
-  currentAnime  = null;
-  pickedChars   = [];
+  currentAnime   = null;
+  currentMode    = 'classic';
+  pickedChars    = [];
   currentStatIdx = 0;
   showAnimeSelect();
 }
@@ -192,7 +232,8 @@ function goHome() {
 function showScreen(id) {
   // Show/hide home logo — hidden on title and select screens
   const logo = document.getElementById('home-logo');
-  if (logo) logo.classList.toggle('hidden', id === 'screen-title' || id === 'screen-select');
+  if (logo) logo.classList.toggle('hidden',
+    id === 'screen-title' || id === 'screen-select' || id === 'screen-mode-select');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
@@ -243,12 +284,52 @@ function buildAnimeGrid() {
 }
 
 // ── Start Game ───────────────────────────────────────────────
-async function startGame(animeKey) {
+function startGame(animeKey) {
   currentAnime   = ANIME_DATA[animeKey];
   currentStatIdx = 0;
   pickedChars    = [];
+  showModeSelect();
+}
 
-  // Show loading screen and fetch images
+function restartSameAnime() {
+  // Replay with same anime + same mode, images already cached
+  if (spinInterval) clearInterval(spinInterval);
+  currentStatIdx = 0;
+  pickedChars    = [];
+  showScreen('screen-game');
+  document.getElementById('game-anime-name').textContent = currentAnime.name.toUpperCase();
+  updatePickedPanel();
+  startStatRound();
+}
+
+// ── Mode Select ───────────────────────────────────────────────
+function showModeSelect() {
+  const grid = document.getElementById('mode-grid');
+  grid.innerHTML = '';
+  for (const [key, mode] of Object.entries(GAME_MODES)) {
+    const card = document.createElement('div');
+    card.className = 'mode-card';
+    card.style.setProperty('--mode-color', mode.color);
+    const rolesHtml = mode.roles
+      ? `<div class="mode-card-roles">${mode.roles.map(r => `<span>${r.icon} ${r.name}</span>`).join('')}</div>`
+      : '';
+    card.innerHTML = `
+      <div class="mode-card-icon">${mode.icon}</div>
+      <div class="mode-card-name">${mode.name}</div>
+      <div class="mode-card-desc">${mode.description}</div>
+      ${rolesHtml}
+    `;
+    card.addEventListener('click', () => selectMode(key));
+    grid.appendChild(card);
+  }
+  showScreen('screen-mode-select');
+}
+
+async function selectMode(modeKey) {
+  currentMode    = modeKey;
+  currentStatIdx = 0;
+  pickedChars    = [];
+
   document.getElementById('loading-anime-name').textContent = currentAnime.name.toUpperCase();
   document.getElementById('loading-anime-name').style.color = currentAnime.color;
   document.getElementById('loading-bar-fill').style.width   = '0%';
@@ -261,15 +342,10 @@ async function startGame(animeKey) {
     new Promise(resolve => setTimeout(resolve, 20000))
   ]);
 
-  // Now launch the game
   showScreen('screen-game');
   document.getElementById('game-anime-name').textContent = currentAnime.name.toUpperCase();
   updatePickedPanel();
   startStatRound();
-}
-
-function restartSameAnime() {
-  startGame(Object.keys(ANIME_DATA).find(k => ANIME_DATA[k] === currentAnime));
 }
 
 // ── Stat Round ───────────────────────────────────────────────
@@ -277,17 +353,14 @@ function startStatRound() {
   paused   = false;
   spinIndex = 0;
 
-  const statKey  = activeKeys()[currentStatIdx];
-  const statName = statLabel(statKey);
-  const statIcon = STAT_ICONS[statKey];
-  const statColor= STAT_COLORS[statKey];
+  const role = activeRoles()[currentStatIdx];
 
   // Header
-  document.getElementById('current-stat-icon').textContent = statIcon;
-  document.getElementById('current-stat-name').textContent = statName;
-  document.getElementById('current-stat-name').style.color = statColor;
+  document.getElementById('current-stat-icon').textContent = role.icon;
+  document.getElementById('current-stat-name').textContent = role.name;
+  document.getElementById('current-stat-name').style.color = role.color;
   document.getElementById('stat-progress-text').textContent =
-    `Stat ${currentStatIdx + 1} of ${activeKeys().length}`;
+    `${currentMode === 'classic' ? 'Stat' : 'Role'} ${currentStatIdx + 1} of ${activeRoles().length}`;
 
   // Progress dots
   buildDots();
@@ -297,16 +370,16 @@ function startStatRound() {
   btn.disabled = false;
   btn.textContent = '⏸ PAUSE';
 
-  // 220–320ms per card: fast enough to be challenging, slow enough to read
+  // 220–320ms per card
   speedMs = 220 + Math.random() * 100;
 
-  startFlipper(statKey, statColor);
+  startFlipper(role.key, role.icon, role.color);
 }
 
 function buildDots() {
   const cont = document.getElementById('progress-dots');
   cont.innerHTML = '';
-  for (let i = 0; i < activeKeys().length; i++) {
+  for (let i = 0; i < activeRoles().length; i++) {
     const d = document.createElement('div');
     d.className = 'dot' + (i < currentStatIdx ? ' done' : i === currentStatIdx ? ' active' : '');
     cont.appendChild(d);
@@ -339,7 +412,7 @@ function getStatDisplay(char, statKey) {
   return `${v}/10`;
 }
 
-function startFlipper(statKey, statColor) {
+function startFlipper(roleKey, roleIcon, roleColor) {
   if (spinInterval) clearInterval(spinInterval);
 
   const total = currentAnime.characters.length;
@@ -364,8 +437,13 @@ function startFlipper(statKey, statColor) {
       ? `<img src="${imgUrl}" alt="${char.name}" />`
       : `<div class="flipper-emoji">${char.emoji}</div>`;
 
-    const statDisplay = getStatDisplay(char, statKey);
-    ratingEl.innerHTML = `<span class="flipper-stat-icon">${STAT_ICONS[statKey]}</span> <span class="flipper-stat-val" style="color:${statColor}">${statDisplay}</span>`;
+    if (currentMode === 'classic') {
+      const statDisplay = getStatDisplay(char, roleKey);
+      ratingEl.innerHTML = `<span class="flipper-stat-icon">${STAT_ICONS[roleKey]}</span> <span class="flipper-stat-val" style="color:${roleColor}">${statDisplay}</span>`;
+    } else {
+      // Non-classic: just show the character's emoji as flavour
+      ratingEl.innerHTML = `<span style="font-size:1.25rem">${char.emoji}</span>`;
+    }
   }
 
   showCard(spinIndex);
@@ -391,16 +469,16 @@ function pauseSpinner() {
   display.classList.add('flipper-paused');
   setTimeout(() => display.classList.remove('flipper-paused'), 800);
 
-  const total   = currentAnime.characters.length;
-  const statKey = activeKeys()[currentStatIdx];
-  const char    = currentAnime.characters[spinIndex % total];
-  const score    = char[statKey] ?? 0;
+  const total = currentAnime.characters.length;
+  const role  = activeRoles()[currentStatIdx];
+  const char  = currentAnime.characters[spinIndex % total];
+  const score = currentMode === 'classic' ? (char[role.key] ?? 0) : 0;
 
   pickedChars.push({
-    stat:     statLabel(statKey),
-    statKey,
-    statIcon: STAT_ICONS[statKey],
-    statColor:STAT_COLORS[statKey],
+    stat:      role.name,
+    statKey:   role.key,
+    statIcon:  role.icon,
+    statColor: role.color,
     character: char,
     score
   });
@@ -410,7 +488,7 @@ function pauseSpinner() {
   // Advance after a short pause
   setTimeout(() => {
     currentStatIdx++;
-    if (currentStatIdx < activeKeys().length) {
+    if (currentStatIdx < activeRoles().length) {
       startStatRound();
     } else {
       clearInterval(spinInterval);
@@ -441,7 +519,10 @@ function updatePickedPanel() {
     const item = document.createElement('div');
     item.className = 'picked-item';
     item.style.setProperty('--stat-color', p.statColor);
-    const scoreDisplay = (p.statKey === 'form' && p.character.formName)
+    // For non-classic modes, just show a checkmark instead of a stat score
+    const scoreDisplay = currentMode !== 'classic'
+      ? `<span style="font-size:1rem">✓</span>`
+      : (p.statKey === 'form' && p.character.formName)
       ? `<span style="font-size:0.75rem">${p.character.formName}</span>`
       : (p.statKey === 'cursedTechnique' && p.character.ctName)
         ? `<span style="font-size:0.75rem">${p.character.ctName}</span>`
@@ -497,25 +578,37 @@ function updatePickedPanel() {
 
 // ── Results ──────────────────────────────────────────────────
 function showResults() {
-  const totalScore = pickedChars.reduce((s, p) => s + p.score, 0);
-  const maxScore   = activeKeys().length * 10;
-  const tier = getTier(totalScore, maxScore);
+  const isClassic = currentMode === 'classic';
+  const mode      = GAME_MODES[currentMode];
 
-  // Tier badge
+  // ── Badge + header ──
   const badge = document.getElementById('results-tier-badge');
-  badge.textContent = tier.tier;
-  badge.style.color = tier.color;
+  if (isClassic) {
+    const totalScore = pickedChars.reduce((s, p) => s + p.score, 0);
+    const maxScore   = activeRoles().length * 10;
+    const tier = getTier(totalScore, maxScore);
+    badge.textContent   = tier.tier;
+    badge.style.color   = tier.color;
+    badge.style.fontSize = '';
+    document.getElementById('total-score').textContent = totalScore;
+    document.getElementById('total-score').style.color = tier.color;
+    document.getElementById('total-max').textContent   = '/ ' + maxScore;
+    document.getElementById('results-title').textContent = 'YOUR FINAL BUILD';
+  } else {
+    badge.textContent    = mode.icon;
+    badge.style.color    = mode.color;
+    badge.style.fontSize = '4rem';
+    document.getElementById('results-title').textContent = mode.name.toUpperCase();
+  }
 
-  // Anime name
+  // Show/hide score + radar for non-classic
+  document.getElementById('results-total').style.display         = isClassic ? '' : 'none';
+  document.querySelector('.results-radar-wrapper').style.display = isClassic ? '' : 'none';
+
   document.getElementById('results-anime-name').textContent = currentAnime.name.toUpperCase();
   document.getElementById('results-anime-name').style.color = currentAnime.color;
 
-  // Total score
-  document.getElementById('total-score').textContent = totalScore;
-  document.getElementById('total-score').style.color = tier.color;
-  document.getElementById('total-max').textContent   = '/ ' + maxScore;
-
-  // Cards
+  // ── Result cards ──
   const grid = document.getElementById('results-grid');
   grid.innerHTML = '';
   pickedChars.forEach((p, i) => {
@@ -528,92 +621,58 @@ function showResults() {
       ? `<div class="result-portrait"><img src="${imgUrl}" alt="${p.character.name}" /></div>`
       : `<div class="result-portrait"><div class="result-portrait-emoji">${p.character.emoji}</div></div>`;
 
-    const scoreLabel = (p.statKey === 'form' && p.character.formName)
-      ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.formName}</div>
-         <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'cursedTechnique' && p.character.ctName)
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.ctName}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'breathingStyle')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.breathingName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'devilFruit')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.devilFruitName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'haki')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.hakiName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'domainExpansion')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.domainName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'chakra')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.chakraName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'mainJutsu')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.jutsuName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'eyes')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.eyeName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'quirk')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.quirkName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'reiatsu')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.reiName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'zanpakuto')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.zanpakutoName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'bankai')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.bankaiName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'nen')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.nenType || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'hatsu')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.hatsuName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'devilPower')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.devilName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'contract')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.contractName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'heroRank')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.rankName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'magic')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.magicName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-      : (p.statKey === 'grimoire')
-        ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${p.character.grimoireName || 'None'}</div>
-           <div class="result-score-num" style="color:${p.statColor};font-size:0.9rem">${p.score}/10</div>`
-        : `<div class="result-score-num" style="color:${p.statColor}">${p.score}/10</div>`;
+    let scoreLabel = '';
+    if (isClassic) {
+      const v = p.score;
+      const named =
+        (p.statKey === 'form'            && p.character.formName)         ? p.character.formName
+      : (p.statKey === 'cursedTechnique' && p.character.ctName)           ? p.character.ctName
+      : (p.statKey === 'breathingStyle')  ? (p.character.breathingName  || 'None')
+      : (p.statKey === 'devilFruit')      ? (p.character.devilFruitName || 'None')
+      : (p.statKey === 'haki')            ? (p.character.hakiName       || 'None')
+      : (p.statKey === 'domainExpansion') ? (p.character.domainName     || 'None')
+      : (p.statKey === 'chakra')          ? (p.character.chakraName     || 'None')
+      : (p.statKey === 'mainJutsu')       ? (p.character.jutsuName      || 'None')
+      : (p.statKey === 'eyes')            ? (p.character.eyeName        || 'None')
+      : (p.statKey === 'quirk')           ? (p.character.quirkName      || 'None')
+      : (p.statKey === 'reiatsu')         ? (p.character.reiName        || 'None')
+      : (p.statKey === 'zanpakuto')       ? (p.character.zanpakutoName  || 'None')
+      : (p.statKey === 'bankai')          ? (p.character.bankaiName     || 'None')
+      : (p.statKey === 'nen')             ? (p.character.nenType        || 'None')
+      : (p.statKey === 'hatsu')           ? (p.character.hatsuName      || 'None')
+      : (p.statKey === 'devilPower')      ? (p.character.devilName      || 'None')
+      : (p.statKey === 'contract')        ? (p.character.contractName   || 'None')
+      : (p.statKey === 'heroRank')        ? (p.character.rankName       || 'None')
+      : (p.statKey === 'magic')           ? (p.character.magicName      || 'None')
+      : (p.statKey === 'grimoire')        ? (p.character.grimoireName   || 'None')
+      : null;
+      scoreLabel = `
+        ${named ? `<div class="result-score-num" style="color:${p.statColor};font-size:0.8rem">${named}</div>` : ''}
+        <div class="result-score-num" style="color:${p.statColor}">${v}/10</div>
+        <div class="result-score-bar">
+          <div class="result-score-fill" style="width:0%;background:${p.statColor}" data-width="${v * 10}%"></div>
+        </div>`;
+    }
 
     card.innerHTML = `
       <div class="result-stat-row">${p.statIcon} ${p.stat.toUpperCase()}</div>
       ${portrait}
       <div class="result-char-name">${p.character.name}</div>
       ${scoreLabel}
-      <div class="result-score-bar">
-        <div class="result-score-fill" style="width:0%;background:${p.statColor}"
-             data-width="${p.score * 10}%"></div>
-      </div>
     `;
     grid.appendChild(card);
   });
 
   showScreen('screen-results');
 
-  // Animate bars after a tick
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    document.querySelectorAll('.result-score-fill').forEach(el => {
-      el.style.width = el.dataset.width;
-    });
-  }));
-
-  // Draw radar chart
-  setTimeout(() => drawRadar(pickedChars), 300);
+  if (isClassic) {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      document.querySelectorAll('.result-score-fill').forEach(el => {
+        el.style.width = el.dataset.width;
+      });
+    }));
+    setTimeout(() => drawRadar(pickedChars), 300);
+  }
 }
 
 // ── Radar Chart ──────────────────────────────────────────────
