@@ -297,8 +297,8 @@ function startStatRound() {
   btn.disabled = false;
   btn.textContent = '⏸ PAUSE';
 
-  // 350–500ms per card: fast enough to be challenging, slow enough to read
-  speedMs = 350 + Math.random() * 150;
+  // 220–320ms per card: fast enough to be challenging, slow enough to read
+  speedMs = 220 + Math.random() * 100;
 
   startFlipper(statKey, statColor);
 }
