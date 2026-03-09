@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 
@@ -80,6 +80,12 @@
           <div class="flipper-rating" id="flipper-rating"></div>
         </div>
 
+        <!-- Draft Pick mode -->
+        <div class="draft-display" id="draft-display" style="display:none">
+          <div class="draft-prompt">Choose for <span id="draft-role-name" class="draft-role-highlight"></span></div>
+          <div class="draft-choices" id="draft-choices"></div>
+        </div>
+
         <div class="pause-hint" id="pause-hint">
           <span class="pulse-dot"></span> Press <kbd>SPACE</kbd> or <button class="btn-pause" id="btn-pause" onclick="pauseSpinner()">⏸ PAUSE</button>
         </div>
@@ -122,7 +128,7 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=12" onerror="document.body.innerHTML='<div style=color:red;padding:2rem>ERROR: data.js failed to load. Check GitHub Pages settings.</div>'"></script>
-  <script src="js/game.js?v=12" onerror="document.body.innerHTML='<div style=color:red;padding:2rem>ERROR: game.js failed to load. Check GitHub Pages settings.</div>'"></script>
+  <script src="js/data.js?v=13" onerror="document.body.innerHTML='<div style=color:red;padding:2rem>ERROR: data.js failed to load. Check GitHub Pages settings.</div>'"></script>
+  <script src="js/game.js?v=13" onerror="document.body.innerHTML='<div style=color:red;padding:2rem>ERROR: game.js failed to load. Check GitHub Pages settings.</div>'"></script>
 </body>
 </html>

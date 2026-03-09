@@ -30,6 +30,10 @@ const GAME_MODES = {
       { key: 'mastermind', icon: '🧠', name: 'The Mastermind', color: '#f97316' },
     ],
   },
+  draftPick: {
+    name: 'Draft Pick', icon: '🎯', color: '#f59e0b',
+    description: 'Roll 3 characters per slot — pick the one you want! No repeats across slots.',
+  },
   buildFamily: {
     name: 'Build Your Family', icon: '👨‍👩‍👧‍👦', color: '#10b981',
     description: 'Assemble your perfect anime family',
@@ -212,7 +216,7 @@ function activeKeys() { return (currentAnime && currentAnime.statKeys) ? current
 
 // Returns role objects for the current mode (works for all modes)
 function activeRoles() {
-  if (currentMode !== 'classic') return GAME_MODES[currentMode].roles;
+  if (currentMode !== 'classic' && currentMode !== 'draftPick') return GAME_MODES[currentMode].roles;
   return activeKeys().map(k => ({ key: k, icon: STAT_ICONS[k], name: statLabel(k), color: STAT_COLORS[k] }));
 }
 
@@ -358,6 +362,17 @@ async function selectMode(modeKey) {
 
 // ── Stat Round ───────────────────────────────────────────────
 function startStatRound() {
+  // Draft Pick mode uses a completely different UI
+  if (currentMode === 'draftPick') {
+    startDraftRound();
+    return;
+  }
+
+  // Show flipper UI, hide draft UI
+  document.getElementById('flipper-display').style.display = '';
+  document.getElementById('draft-display').style.display   = 'none';
+  document.getElementById('pause-hint').style.display      = '';
+
   paused   = false;
   spinIndex = 0;
 
@@ -382,6 +397,81 @@ function startStatRound() {
   speedMs = 220 + Math.random() * 100;
 
   startFlipper(role.key, role.icon, role.color);
+}
+
+function startDraftRound() {
+  const role = activeRoles()[currentStatIdx];
+
+  // Header
+  document.getElementById('current-stat-icon').textContent = role.icon;
+  document.getElementById('current-stat-name').textContent = role.name;
+  document.getElementById('current-stat-name').style.color = role.color;
+  document.getElementById('stat-progress-text').textContent =
+    `Stat ${currentStatIdx + 1} of ${activeRoles().length}`;
+  buildDots();
+
+  // Show draft UI, hide flipper + pause hint
+  document.getElementById('flipper-display').style.display = 'none';
+  document.getElementById('draft-display').style.display   = '';
+  document.getElementById('pause-hint').style.display      = 'none';
+
+  // Filter out already-picked characters
+  const usedNames = new Set(pickedChars.map(p => p.character.name));
+  const available = currentAnime.characters.filter(c => !usedNames.has(c.name));
+
+  // Shuffle and take 3
+  const options = [...available].sort(() => Math.random() - 0.5).slice(0, Math.min(3, available.length));
+
+  // Role label
+  document.getElementById('draft-role-name').textContent = role.name;
+  document.getElementById('draft-role-name').style.color  = role.color;
+
+  // Render cards
+  const choicesEl = document.getElementById('draft-choices');
+  choicesEl.innerHTML = '';
+  options.forEach(char => {
+    const imgUrl      = imageCache[char.name];
+    const statDisplay = getStatDisplay(char, role.key);
+    const card        = document.createElement('div');
+    card.className    = 'draft-card';
+    card.innerHTML    = `
+      <div class="draft-card-portrait">
+        ${imgUrl
+          ? `<img src="${imgUrl}" alt="${char.name}" />`
+          : `<div class="draft-card-emoji">${char.emoji}</div>`}
+      </div>
+      <div class="draft-card-name">${char.name}</div>
+      <div class="draft-card-stat" style="color:${role.color}">${role.icon} ${statDisplay}</div>
+      <button class="draft-pick-btn" style="border-color:${role.color};color:${role.color}">PICK</button>
+    `;
+    card.querySelector('.draft-pick-btn').addEventListener('click', () => draftPickChar(char, role));
+    choicesEl.appendChild(card);
+  });
+}
+
+function draftPickChar(char, role) {
+  // Disable all pick buttons immediately to prevent double-pick
+  document.querySelectorAll('.draft-pick-btn').forEach(b => b.disabled = true);
+
+  const score = char[role.key] ?? 0;
+  pickedChars.push({
+    stat:      role.name,
+    statKey:   role.key,
+    statIcon:  role.icon,
+    statColor: role.color,
+    character: char,
+    score
+  });
+  updatePickedPanel();
+
+  currentStatIdx++;
+  setTimeout(() => {
+    if (currentStatIdx < activeRoles().length) {
+      startStatRound();
+    } else {
+      showResults();
+    }
+  }, 350);
 }
 
 function buildDots() {
@@ -528,7 +618,7 @@ function updatePickedPanel() {
     item.className = 'picked-item';
     item.style.setProperty('--stat-color', p.statColor);
     // For non-classic modes, just show a checkmark instead of a stat score
-    const scoreDisplay = currentMode !== 'classic'
+    const scoreDisplay = (currentMode !== 'classic' && currentMode !== 'draftPick')
       ? `<span style="font-size:1rem">✓</span>`
       : (p.statKey === 'form' && p.character.formName)
       ? `<span style="font-size:0.75rem">${p.character.formName}</span>`
@@ -586,7 +676,7 @@ function updatePickedPanel() {
 
 // ── Results ──────────────────────────────────────────────────
 function showResults() {
-  const isClassic = currentMode === 'classic';
+  const isClassic = currentMode === 'classic' || currentMode === 'draftPick';
   const mode      = GAME_MODES[currentMode];
 
   // ── Badge + header ──
