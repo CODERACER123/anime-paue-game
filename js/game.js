@@ -173,9 +173,6 @@ async function fetchCharacterImages(anime) {
   await new Promise(r => setTimeout(r, 350));
 }
 
-const CARD_HEIGHT        = 118;  // card height (110) + gap (8)
-const VISIBLE_HALF       = 3;   // cards visible above / below center
-const SPIN_CENTER_OFFSET = 2;   // how many indices ahead of spinIndex the centered card sits
 
 // Returns the stat keys for the currently active anime (or global default)
 function activeKeys() { return (currentAnime && currentAnime.statKeys) ? currentAnime.statKeys : STAT_KEYS; }
@@ -295,18 +292,15 @@ function startStatRound() {
   // Progress dots
   buildDots();
 
-  // Spinner
-  buildSpinner(statKey, statColor);
-
   // Enable pause button
   const btn = document.getElementById('btn-pause');
   btn.disabled = false;
   btn.textContent = '⏸ PAUSE';
 
-  // Vary speed per stat for fun
-  speedMs = 60 + Math.random() * 60;
+  // 350–500ms per card: fast enough to be challenging, slow enough to read
+  speedMs = 350 + Math.random() * 150;
 
-  startSpinning(statKey);
+  startFlipper(statKey, statColor);
 }
 
 function buildDots() {
@@ -319,100 +313,67 @@ function buildDots() {
   }
 }
 
-// ── Spinner ──────────────────────────────────────────────────
-function buildSpinner(statKey, statColor) {
-  const track = document.getElementById('spinner-track');
-  track.innerHTML = '';
-  track.style.transform = 'translateY(0)';
-
-  const chars = [...currentAnime.characters, ...currentAnime.characters, ...currentAnime.characters];
-  chars.forEach((char, i) => {
-    const card = document.createElement('div');
-    card.className = 'spin-card';
-    card.dataset.idx = i % currentAnime.characters.length;
-
-    const statVal  = char[statKey] ?? 0;
-    const imgUrl   = imageCache[char.name];
-    const portrait = imgUrl
-      ? `<div class="spin-card-portrait"><img src="${imgUrl}" alt="${char.name}" /></div>`
-      : `<div class="spin-card-portrait"><div class="spin-card-portrait-emoji">${char.emoji}</div></div>`;
-
-    const statDisplay = (statKey === 'form' && char.formName)
-      ? `${char.formName} <span style="opacity:0.7">(${statVal}/10)</span>`
-      : (statKey === 'cursedTechnique' && char.ctName)
-        ? `${char.ctName} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'breathingStyle')
-        ? `${char.breathingName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'devilFruit')
-        ? `${char.devilFruitName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'haki')
-        ? `${char.hakiName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'domainExpansion')
-        ? `${char.domainName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'chakra')
-        ? `${char.chakraName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'mainJutsu')
-        ? `${char.jutsuName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'eyes')
-        ? `${char.eyeName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'quirk')
-        ? `${char.quirkName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'reiatsu')
-        ? `${char.reiName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'zanpakuto')
-        ? `${char.zanpakutoName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'bankai')
-        ? `${char.bankaiName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'nen')
-        ? `${char.nenType || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'hatsu')
-        ? `${char.hatsuName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'devilPower')
-        ? `${char.devilName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'contract')
-        ? `${char.contractName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'heroRank')
-        ? `${char.rankName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'magic')
-        ? `${char.magicName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : (statKey === 'grimoire')
-        ? `${char.grimoireName || 'None'} <span style="opacity:0.7">(${statVal}/10)</span>`
-        : `${statVal}/10`;
-
-    card.innerHTML = `
-      ${portrait}
-      <div class="spin-card-info">
-        <div class="spin-card-name">${char.name}</div>
-        <div class="spin-card-stat" style="color:${statColor}">${STAT_ICONS[statKey]} ${statDisplay}</div>
-      </div>
-    `;
-    track.appendChild(card);
-  });
+// ── Flipper ──────────────────────────────────────────────────
+function getStatDisplay(char, statKey) {
+  const v = char[statKey] ?? 0;
+  if (statKey === 'form'            && char.formName)  return `${char.formName} (${v}/10)`;
+  if (statKey === 'cursedTechnique' && char.ctName)    return `${char.ctName} (${v}/10)`;
+  if (statKey === 'breathingStyle')  return `${char.breathingName  || 'None'} (${v}/10)`;
+  if (statKey === 'devilFruit')      return `${char.devilFruitName || 'None'} (${v}/10)`;
+  if (statKey === 'haki')            return `${char.hakiName       || 'None'} (${v}/10)`;
+  if (statKey === 'domainExpansion') return `${char.domainName     || 'None'} (${v}/10)`;
+  if (statKey === 'chakra')          return `${char.chakraName     || 'None'} (${v}/10)`;
+  if (statKey === 'mainJutsu')       return `${char.jutsuName      || 'None'} (${v}/10)`;
+  if (statKey === 'eyes')            return `${char.eyeName        || 'None'} (${v}/10)`;
+  if (statKey === 'quirk')           return `${char.quirkName      || 'None'} (${v}/10)`;
+  if (statKey === 'reiatsu')         return `${char.reiName        || 'None'} (${v}/10)`;
+  if (statKey === 'zanpakuto')       return `${char.zanpakutoName  || 'None'} (${v}/10)`;
+  if (statKey === 'bankai')          return `${char.bankaiName     || 'None'} (${v}/10)`;
+  if (statKey === 'nen')             return `${char.nenType        || 'None'} (${v}/10)`;
+  if (statKey === 'hatsu')           return `${char.hatsuName      || 'None'} (${v}/10)`;
+  if (statKey === 'devilPower')      return `${char.devilName      || 'None'} (${v}/10)`;
+  if (statKey === 'contract')        return `${char.contractName   || 'None'} (${v}/10)`;
+  if (statKey === 'heroRank')        return `${char.rankName       || 'None'} (${v}/10)`;
+  if (statKey === 'magic')           return `${char.magicName      || 'None'} (${v}/10)`;
+  if (statKey === 'grimoire')        return `${char.grimoireName   || 'None'} (${v}/10)`;
+  return `${v}/10`;
 }
 
-function startSpinning(statKey) {
+function startFlipper(statKey, statColor) {
   if (spinInterval) clearInterval(spinInterval);
 
-  const track  = document.getElementById('spinner-track');
-  const cards  = track.querySelectorAll('.spin-card');
-  const total  = currentAnime.characters.length;
+  const total = currentAnime.characters.length;
+  spinIndex = Math.floor(Math.random() * total); // start at random position
 
-  // Start from the middle group
-  spinIndex = total;
+  function showCard(idx) {
+    const char   = currentAnime.characters[idx % total];
+    const imgUrl = imageCache[char.name];
+
+    const nameEl     = document.getElementById('flipper-name');
+    const portraitEl = document.getElementById('flipper-portrait-wrap');
+    const ratingEl   = document.getElementById('flipper-rating');
+    const display    = document.getElementById('flipper-display');
+
+    // Trigger flip animation
+    display.classList.remove('flip-in');
+    void display.offsetWidth;
+    display.classList.add('flip-in');
+
+    nameEl.textContent = char.name;
+    portraitEl.innerHTML = imgUrl
+      ? `<img src="${imgUrl}" alt="${char.name}" />`
+      : `<div class="flipper-emoji">${char.emoji}</div>`;
+
+    const statDisplay = getStatDisplay(char, statKey);
+    ratingEl.innerHTML = `<span class="flipper-stat-icon">${STAT_ICONS[statKey]}</span> <span class="flipper-stat-val" style="color:${statColor}">${statDisplay}</span>`;
+  }
+
+  showCard(spinIndex);
 
   spinInterval = setInterval(() => {
     if (paused) return;
-
-    spinIndex++;
-    // When we reach the last group, reset to middle group seamlessly
-    if (spinIndex >= total * 2) spinIndex = total;
-
-    const yOffset = -(spinIndex * CARD_HEIGHT) + (VISIBLE_HALF * CARD_HEIGHT);
-    track.style.transform = `translateY(${yOffset}px)`;
-
-    // Highlight the card that is visually centered inside the selector box
-    const centeredCardIdx = spinIndex - SPIN_CENTER_OFFSET;
-    cards.forEach((c, i) => c.classList.toggle('highlighted', i === centeredCardIdx));
+    spinIndex = (spinIndex + 1) % total;
+    showCard(spinIndex);
   }, speedMs);
 }
 
@@ -425,16 +386,14 @@ function pauseSpinner() {
   btn.disabled = true;
   btn.textContent = '✓ PAUSED';
 
-  // Flash the selector ring
-  const sel = document.querySelector('.spinner-selector');
-  sel.classList.add('paused');
-  setTimeout(() => sel.classList.remove('paused'), 800);
+  // Flash the flipper display
+  const display = document.getElementById('flipper-display');
+  display.classList.add('flipper-paused');
+  setTimeout(() => display.classList.remove('flipper-paused'), 800);
 
-  // Determine selected character — use the same centered-card offset as the highlight
-  const total    = currentAnime.characters.length;
-  const charIdx  = ((spinIndex - SPIN_CENTER_OFFSET) % total + total) % total;
-  const statKey  = activeKeys()[currentStatIdx];
-  const char     = currentAnime.characters[charIdx];
+  const total   = currentAnime.characters.length;
+  const statKey = activeKeys()[currentStatIdx];
+  const char    = currentAnime.characters[spinIndex % total];
   const score    = char[statKey] ?? 0;
 
   pickedChars.push({
