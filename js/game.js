@@ -302,6 +302,14 @@ function restartSameAnime() {
   startStatRound();
 }
 
+function pickDifferentMode() {
+  // Same anime, choose a new mode — images already cached
+  if (spinInterval) clearInterval(spinInterval);
+  currentStatIdx = 0;
+  pickedChars    = [];
+  showModeSelect();
+}
+
 // ── Mode Select ───────────────────────────────────────────────
 function showModeSelect() {
   const grid = document.getElementById('mode-grid');
